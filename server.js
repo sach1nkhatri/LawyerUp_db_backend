@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const newsRoutes = require('./routes/newsRoutes');
-const lawyerRoutes = require('./routes/LawyerRoutes'); // ✅ ADD THIS
+const lawyerRoutes = require('./routes/LawyerRoutes');
 
 dotenv.config();
 

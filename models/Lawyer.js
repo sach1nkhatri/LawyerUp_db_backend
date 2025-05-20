@@ -1,33 +1,27 @@
 const mongoose = require('mongoose');
 
-const timeSlotSchema = new mongoose.Schema({
-  start: { type: String, required: true },
-  end: { type: String, required: true },
-});
-
 const lawyerSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
-  specialization: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  phone: { type: String, required: true },
+  fullName: String,
+  specialization: String,
+  email: String,
+  phone: String,
   state: String,
   city: String,
   address: String,
   qualification: String,
-  profilePhoto: String, // store filename or cloud URL
-  licenseFile: String,  // store filename or cloud URL
+  profilePhoto: String,
+  licenseFile: String,
+  schedule: Object,
   status: {
     type: String,
-    enum: ['pending', 'verified', 'hold', 'disabled'],
+    enum: ['pending', 'verified', 'listed', 'hold', 'rejected', 'disabled'],
     default: 'pending'
-  },  
-  schedule: {
-    type: Map,
-    of: [timeSlotSchema],
-    default: {},
   },
-}, {
-  timestamps: true
-});
+  user: {                             // ✅ link to the logged-in user
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Lawyer', lawyerSchema);
