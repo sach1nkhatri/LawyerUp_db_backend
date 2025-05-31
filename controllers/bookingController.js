@@ -2,16 +2,64 @@ const Booking = require('../models/Booking');
 const Lawyer = require('../models/Lawyer');
 const { generateAvailableSlots } = require('../utils/slotUtils');
 
-// 📌 Create a new booking
+
 exports.createBooking = async (req, res) => {
   try {
-    const booking = await Booking.create(req.body);
+    const {
+      user,
+      lawyer,
+      lawyerList,
+      date,
+      time,
+      duration = 1,
+      mode,
+      description,
+    } = req.body;
+
+    if (!user || !lawyer || !lawyerList || !date || !time || !duration) {
+      return res.status(400).json({ message: 'Missing required booking details' });
+    }
+
+    const newStart = toMinutes(time);
+    const newEnd = newStart + duration * 60;
+
+    const existing = await Booking.find({ lawyer, date });
+
+    const conflict = existing.some(b => {
+      const existingStart = toMinutes(b.time);
+      const existingEnd = existingStart + b.duration * 60;
+      return !(newEnd <= existingStart || newStart >= existingEnd);
+    });
+
+    if (conflict) {
+      return res.status(409).json({ message: 'Time slot already booked. Please choose another.' });
+    }
+
+    const booking = await Booking.create({
+      user,
+      lawyer,
+      lawyerList,
+      date,
+      time,
+      duration,
+      mode,
+      description,
+      status: 'pending',
+      reviewed: false,
+    });
+
     res.status(201).json(booking);
   } catch (error) {
     console.error('Booking creation failed:', error);
     res.status(500).json({ message: 'Failed to create booking' });
   }
 };
+
+function toMinutes(str) {
+  const [h, m] = str.split(':').map(Number);
+  return h * 60 + m;
+}
+
 
 // 📌 Get all bookings for a user with populated lawyer data
 // GET /api/bookings/user/:userId
@@ -95,11 +143,12 @@ exports.updateMeetingLink = async (req, res) => {
 // ❌ Delete a booking
 exports.deleteBooking = async (req, res) => {
     try {
-      await Booking.findByIdAndDelete(req.params.id);
-      res.json({ message: 'Booking deleted successfully' });
+        await Booking.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Booking deleted successfully' });
     } catch (err) {
-      console.error('Delete failed:', err);
-      res.status(500).json({ message: 'Failed to delete booking' });
+        console.error('Delete failed:', err);
+        res.status(500).json({ message: 'Failed to delete booking' });
     }
-  };
+};
+
   
