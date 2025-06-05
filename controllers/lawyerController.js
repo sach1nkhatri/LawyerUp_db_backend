@@ -1,9 +1,8 @@
-// at top
 const express = require('express');
 const router = express.Router();
 const Lawyer = require('../models/Lawyer');
 
-// this route allows status check by email or phone
+// GET /api/lawyers/by-user?email=... OR ?contactNumber=...
 router.get('/by-user', async (req, res) => {
   try {
     const { email, contactNumber } = req.query;
@@ -17,7 +16,6 @@ router.get('/by-user', async (req, res) => {
     if (contactNumber) filter.phone = contactNumber;
 
     const lawyer = await Lawyer.findOne(filter);
-
     if (!lawyer) {
       return res.status(404).json({ message: 'No lawyer application found.' });
     }
@@ -29,11 +27,21 @@ router.get('/by-user', async (req, res) => {
   }
 });
 
-// if you want, add your POST directly here too
+// POST /api/lawyers
 router.post('/', async (req, res) => {
   try {
-    const { email, phone, schedule } = req.body;
+    const {
+      fullName, specialization, email, phone, state, city, address,
+      qualification, profilePhoto, licenseFile, schedule,
+      description, specialCase, socialLink,
+      education, workExperience
+    } = req.body;
 
+    if (!fullName || !email || !phone || !schedule || !description || !education?.length) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // check for existing application
     const existing = await Lawyer.findOne({
       $or: [{ email }, { phone }]
     });
@@ -43,8 +51,12 @@ router.post('/', async (req, res) => {
     }
 
     const newLawyer = new Lawyer({
-      ...req.body,
+      fullName, specialization, email, phone, state, city, address,
+      qualification, profilePhoto, licenseFile,
       schedule: typeof schedule === 'string' ? JSON.parse(schedule) : schedule,
+      description, specialCase, socialLink,
+      education, workExperience,
+      status: 'pending' // required for tracking
     });
 
     await newLawyer.save();

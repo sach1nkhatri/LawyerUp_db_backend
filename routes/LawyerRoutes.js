@@ -48,9 +48,16 @@ router.post('/', auth, async (req, res) => {
 });
 
 // 🛠 PUT: Update lawyer by ID
+// 🛠 PUT: Update lawyer by ID (supports nested arrays + safety)
 router.put('/:id', async (req, res) => {
   try {
-    const updated = await Lawyer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateFields = {
+      ...req.body,
+      education: Array.isArray(req.body.education) ? req.body.education : [],
+      workExperience: Array.isArray(req.body.workExperience) ? req.body.workExperience : [],
+    };
+
+    const updated = await Lawyer.findByIdAndUpdate(req.params.id, updateFields, { new: true });
 
     if (!updated) {
       return res.status(404).json({ message: 'Lawyer not found' });
@@ -62,6 +69,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to update lawyer' });
   }
 });
+
 
 // ❌ DELETE: Remove lawyer by ID
 router.delete('/:id', async (req, res) => {
