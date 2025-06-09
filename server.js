@@ -7,6 +7,7 @@ const newsRoutes = require('./routes/newsRoutes');
 const lawyerRoutes = require('./routes/LawyerRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 dotenv.config();
 
@@ -41,6 +42,8 @@ app.use('/api/news', newsRoutes);
 app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/report', reportRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
