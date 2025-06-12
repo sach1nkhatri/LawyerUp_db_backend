@@ -14,8 +14,8 @@ const newsSchema = new mongoose.Schema({
     image: String,
     likes: { type: Number, default: 0 },
     dislikes: { type: Number, default: 0 },
-    likedBy: [String],
-    dislikedBy: [String],    
+    likedBy: { type: [String], default: [] },
+    dislikedBy: { type: [String], default: [] },
     comments: { type: [commentSchema], default: [] }
 }, { timestamps: true });
 

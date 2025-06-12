@@ -66,5 +66,61 @@ router.post('/:id/comment', authMiddleware, async (req, res) => {
     res.json({ comments: news.comments });
 });
 
+router.post('/:id/undislike', async (req, res) => {
+    const { userId } = req.body;
+    const news = await News.findById(req.params.id);
+  
+    if (!news) return res.status(404).json({ error: 'News not found' });
+  
+    // Only remove if user has disliked
+    if (news.dislikedBy.includes(userId)) {
+      news.dislikedBy = news.dislikedBy.filter(u => u !== userId);
+      if (news.dislikes > 0) news.dislikes--;
+    }
+  
+    await news.save();
+    res.json({ likes: news.likes, dislikes: news.dislikes });
+  });
+  
+  // UNLIKE: Removes user's like
+router.post('/:id/unlike', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  
+    const news = await News.findById(req.params.id);
+    if (!news) return res.status(404).json({ error: 'News not found' });
+  
+    if (news.likedBy.includes(userId)) {
+      news.likedBy = news.likedBy.filter(u => u !== userId);
+      if (news.likes > 0) news.likes--;
+    }
+  
+    await news.save();
+    res.json({ likes: news.likes, dislikes: news.dislikes });
+  });
+
+  // DELETE a comment by index (auth required)
+router.delete('/:id/comment/:index', authMiddleware, async (req, res) => {
+    const news = await News.findById(req.params.id);
+    const commentIndex = parseInt(req.params.index);
+    const user = req.user.fullName;
+  
+    if (!news) return res.status(404).json({ error: 'News not found' });
+  
+    const comment = news.comments[commentIndex];
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+  
+    // Only allow deletion by original commenter
+    if (comment.user !== user) {
+      return res.status(403).json({ error: 'You can only delete your own comments.' });
+    }
+  
+    news.comments.splice(commentIndex, 1);
+    await news.save();
+  
+    res.json({ comments: news.comments });
+  });
+  
+  
 module.exports = router;
 
