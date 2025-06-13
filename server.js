@@ -68,30 +68,38 @@ io.on('connection', (socket) => {
     socket.join(bookingId);
   });
 
-  socket.on('sendMessage', async ({ bookingId, senderId, text }) => {
+  socket.on('sendMessage', async ({ bookingId, senderId, text, senderName }) => {
     const message = {
       sender: senderId,
       text,
       timestamp: new Date(),
       status: 'sent'
     };
-  
-    await Booking.findByIdAndUpdate(
-      bookingId,
-      { $push: { messages: message } }
-    );
-  
+
+    await Booking.findByIdAndUpdate(bookingId, { $push: { messages: message } });
+
     io.to(bookingId).emit('receiveMessage', {
       ...message,
-      sender: { _id: senderId } // expected by frontend
+      sender: {
+        _id: senderId,
+        fullName: senderName
+      }
     });
   });
-  
+
+  // ✅ Handle typing notification
+  socket.on('userTyping', (bookingId) => {
+    socket.to(bookingId).emit('userTyping');
+  });
 
   socket.on('disconnect', () => {
     console.log('❌ Socket disconnected');
   });
 });
+
+
+  
+
 
 // Server Start
 const PORT = process.env.PORT || 5000;
