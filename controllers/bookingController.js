@@ -151,4 +151,72 @@ exports.deleteBooking = async (req, res) => {
     }
 };
 
-  
+
+exports.getMessages = async (req, res) => {
+  const { bookingId } = req.params;
+
+  try {
+    const booking = await Booking.findById(bookingId)
+      .populate('messages.sender', 'fullName email') // so we can show names
+      .select('messages');
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    res.status(200).json(booking.messages);
+  } catch (err) {
+    console.error('Fetch messages failed:', err);
+    res.status(500).json({ error: 'Failed to load messages' });
+  }
+};
+
+
+// 📩 Send a chat message for a booking
+exports.sendMessage = async (req, res) => {
+  const { bookingId } = req.params;
+  const { senderId, text } = req.body;
+
+  if (!text || !senderId) {
+    return res.status(400).json({ error: 'Missing text or senderId' });
+  }
+
+  try {
+    const message = {
+      sender: senderId,
+      text,
+      timestamp: new Date(),
+      status: 'sent'
+    };
+
+    const booking = await Booking.findByIdAndUpdate(
+      bookingId,
+      { $push: { messages: message } },
+      { new: true }
+    );
+
+    const populatedMsg = await Booking.findById(bookingId)
+      .select({ messages: { $slice: -1 } })
+      .populate('messages.sender', 'fullName email');
+
+    res.status(200).json(populatedMsg.messages[0]); // return last pushed message
+  } catch (err) {
+    console.error('Send message failed:', err);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+};
+
+exports.markMessagesAsRead = async (req, res) => {
+  const { bookingId } = req.params;
+
+  try {
+    const updated = await Booking.updateOne(
+      { _id: bookingId },
+      { $set: { 'messages.$[].status': 'read' } }
+    );
+    res.status(200).json({ message: 'Messages marked as read' });
+  } catch (err) {
+    console.error('Mark read failed:', err);
+    res.status(500).json({ error: 'Failed to mark messages as read' });
+  }
+};

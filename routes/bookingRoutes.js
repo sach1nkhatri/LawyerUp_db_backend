@@ -22,4 +22,11 @@ router.patch('/:id/meeting-link', bookingController.updateMeetingLink);
 //ula ula
 router.delete('/:id', bookingController.deleteBooking);
 
+
+router.post('/:bookingId/chat', bookingController.sendMessage);
+router.get('/:bookingId/chat', bookingController.getMessages);
+router.patch('/:bookingId/chat/read', bookingController.markMessagesAsRead);
+
+
+
 module.exports = router;
