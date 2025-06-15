@@ -63,3 +63,26 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+exports.updateProfile = async (req, res) => {
+  const { name, contactNumber, city, state, address } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Update only fields provided
+    if (name) user.fullName = name;
+    if (contactNumber) user.contactNumber = contactNumber;
+    if (city) user.city = city;
+    if (state) user.state = state;
+    if (address) user.address = address;
+
+    await user.save();
+
+    res.status(200).json({ message: 'Profile updated successfully', user });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

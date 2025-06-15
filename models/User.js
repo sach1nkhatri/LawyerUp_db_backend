@@ -15,8 +15,8 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    select: false // ← this hides it in queries by default
-  },  
+    select: false
+  },
   contactNumber: {
     type: String,
     required: true
@@ -29,9 +29,22 @@ const userSchema = new mongoose.Schema({
   plan: {
     type: String,
     default: 'Free Trial'
+  },
+
+//complete profile section
+  state: {
+    type: String,
+    default: ''
+  },
+  city: {
+    type: String,
+    default: ''
+  },
+  address: {
+    type: String,
+    default: ''
   }
-}, {
-  timestamps: true
-});
+
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
+const { register, login, updateProfile } = require('../controllers/authController');
 const auth = require('../middleware/authMiddleware');
 const User = require('../models/User');
 
@@ -18,4 +18,5 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+router.patch('/update-profile', auth, updateProfile);
 module.exports = router;
