@@ -6,9 +6,10 @@ const router = express.Router();
 const PdfModel = require('../models/pdf'); // ✅ this was missing
 
 const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+  destination: (req, file, cb) => {
+    const pdfPath = path.join(__dirname, '../uploads/pdf');
+    if (!fs.existsSync(pdfPath)) fs.mkdirSync(pdfPath, { recursive: true });
+    cb(null, pdfPath);
   },
 });
 const upload = multer({ storage });
