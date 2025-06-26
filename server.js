@@ -14,6 +14,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const pdfRoutes = require('./routes/pdfRoutes');
 const faqRoutes = require('./routes/faqRoutes');
+const aiRoutes = require('./routes/aiRoutes')
 
 // Setup
 dotenv.config();
@@ -29,16 +30,21 @@ const io = new Server(server, {
 });
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:8010',
+  'http://localhost:5000'
+];
+
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || ['http://localhost:3000', 'http://localhost:3001'].includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
+  origin: '*',
+  credentials: false
 }));
+
+
+
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -57,6 +63,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/report', reportRoutes);
 app.use('/api/pdfs', pdfRoutes);
 app.use('/api/faqs', faqRoutes);
+app.use('/api/ai', aiRoutes);
 
 // ✅ SOCKET.IO: Real-time chat logic
 const Booking = require('./models/Booking');
