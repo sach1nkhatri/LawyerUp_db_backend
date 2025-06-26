@@ -3,6 +3,8 @@ const router = express.Router();
 const Lawyer = require('../models/Lawyer');
 const auth = require('../middleware/authMiddleware');
 const User = require('../models/User');
+const upload = require('../middleware/uploadMiddleware'); 
+
 
 // 🔍 GET: Fetch a lawyer by email or phone
 router.get('/by-user', async (req, res) => {
@@ -31,42 +33,56 @@ router.get('/by-user', async (req, res) => {
 });
 
 // ✍️ POST: Create new lawyer application
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.fields([
+  { name: 'profilePhoto', maxCount: 1 },
+  { name: 'licenseFile', maxCount: 1 },
+]), async (req, res) => {
   try {
+    const data = req.body;
+
     const newLawyer = new Lawyer({
-      ...req.body,
-      user: req.user._id,      // ✅ Link to user
-      status: 'pending',       // ✅ Required for status panel
+      ...data,
+      user: req.user._id,
+      status: 'pending',
+      profilePhoto: `/uploads/lawyers/photo/${req.files.profilePhoto?.[0]?.filename}`.replace(/\\/g, '/'),
+      licenseFile: `/uploads/lawyers/license/${req.files.licenseFile?.[0]?.filename}`,
+      schedule: typeof data.schedule === 'string' ? JSON.parse(data.schedule) : data.schedule,
+      education: JSON.parse(data.education || '[]'),
+      workExperience: JSON.parse(data.workExperience || '[]'),
     });
 
     await newLawyer.save();
     res.status(201).json(newLawyer);
   } catch (err) {
-    console.error('Error in POST /api/lawyers:', err);
+    console.error('Error creating lawyer with files:', err);
     res.status(500).json({ message: 'Failed to create lawyer profile' });
   }
 });
 
+
 // 🛠 PUT: Update lawyer by ID
-// 🛠 PUT: Update lawyer by ID (supports nested arrays + safety)
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, upload.single('profilePhoto'), async (req, res) => {
   try {
-    const updateFields = {
+    const updates = {
       ...req.body,
-      education: Array.isArray(req.body.education) ? req.body.education : [],
-      workExperience: Array.isArray(req.body.workExperience) ? req.body.workExperience : [],
+      education: JSON.parse(req.body.education || '[]'),
+      workExperience: JSON.parse(req.body.workExperience || '[]'),
+      schedule: JSON.parse(req.body.schedule || '{}'),
     };
 
-    const updated = await Lawyer.findByIdAndUpdate(req.params.id, updateFields, { new: true });
-
-    if (!updated) {
-      return res.status(404).json({ message: 'Lawyer not found' });
+    if (req.file) {
+      updates.profilePhoto = `/uploads/lawyers/photo/${req.file.filename}`.replace(/\\/g, '/');
     }
+    
+
+    const updated = await Lawyer.findByIdAndUpdate(req.params.id, updates, { new: true });
+
+    if (!updated) return res.status(404).json({ message: 'Lawyer not found' });
 
     res.json(updated);
   } catch (err) {
-    console.error('Error updating lawyer:', err);
-    res.status(500).json({ message: 'Failed to update lawyer' });
+    console.error('Error saving lawyer profile:', err);
+    res.status(500).json({ message: 'Failed to update profile' });
   }
 });
 

@@ -7,16 +7,15 @@ const getUploadDir = (file) => {
 
   // 📄 PDF files
   if (mime === 'application/pdf') {
-    // Lawyer license vs general PDFs
-    if (file.fieldname === 'license') return 'uploads/lawyers/license';
+    if (file.fieldname === 'licenseFile') return 'uploads/lawyers/license'; // fixed
     return 'uploads/pdf';
   }
-
-  // 🖼️ Images
+  
   if (mime.startsWith('image/')) {
-    if (file.fieldname === 'lawyerImage') return 'uploads/lawyers';
+    if (file.fieldname === 'profilePhoto') return 'uploads/lawyers/photo';
     return 'uploads/news';
   }
+  
 
   // ❌ Fallback
   return 'uploads/misc';
