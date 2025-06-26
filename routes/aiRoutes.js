@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/authMiddleware');
 const ai = require('../controllers/aiController');
+const authMiddleware = require('../middleware/authMiddleware'); // ✅ valid import
 
-router.use(auth);
+router.get('/chats', authMiddleware, ai.getChats);
+router.get('/chats/:id', authMiddleware, ai.getChatById);
+router.post('/chats', authMiddleware, ai.createChat);
+router.delete('/chats/:id', authMiddleware, ai.deleteChat);
 
-router.get('/chats', ai.getChats);
-router.get('/chats/:id', ai.getChatById);
-router.post('/chats', ai.createChat);
-router.delete('/chats/:id', ai.deleteChat);
-router.post('/send', ai.sendMessage);
+router.post('/send', authMiddleware, ai.sendMessage);
+router.post('/saveReply', authMiddleware, ai.saveReply);
+router.post('/appendUserMessage', authMiddleware, ai.appendUserMessage); // ✅ fixed
 
 module.exports = router;
