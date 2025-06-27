@@ -2,45 +2,48 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
+// 🎯 Determine the upload folder based on fieldname
 const getUploadDir = (file) => {
-  const mime = file.mimetype;
+  const { mimetype, fieldname } = file;
 
-  // 📄 PDF files
-  if (mime === 'application/pdf') {
-    if (file.fieldname === 'licenseFile') return 'uploads/lawyers/license'; // fixed
-    return 'uploads/pdf';
-  }
-  
-  if (mime.startsWith('image/')) {
-    if (file.fieldname === 'profilePhoto') return 'uploads/lawyers/photo';
-    return 'uploads/news';
-  }
-  
+  if (fieldname === 'image') return 'uploads/news';
+  if (fieldname === 'profilePhoto') return 'uploads/lawyers/photo';
+  if (fieldname === 'licenseFile') return 'uploads/lawyers/license';
+  if (mimetype === 'application/pdf') return 'uploads/pdf';
 
-  // ❌ Fallback
+  // Fallback
   return 'uploads/misc';
 };
 
+// 📦 Multer storage setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = getUploadDir(file);
-    if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    const ext = path.extname(file.originalname);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
   }
 });
 
-// 🛡️ Allow images and PDFs only
+// 🛡️ Only allow images and PDFs
 const fileFilter = (req, file, cb) => {
-  const allowed = /jpeg|jpg|png|pdf/;
-  const ext = allowed.test(path.extname(file.originalname).toLowerCase());
-  const mime = allowed.test(file.mimetype.toLowerCase());
-  if (ext && mime) cb(null, true);
-  else cb(new Error('Only image and PDF files are allowed'));
+  const allowedExts = /jpeg|jpg|png|pdf/;
+  const isExtValid = allowedExts.test(path.extname(file.originalname).toLowerCase());
+  const isMimeValid = allowedExts.test(file.mimetype.toLowerCase());
+
+  if (isExtValid && isMimeValid) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image and PDF files are allowed.'));
+  }
 };
 
 const upload = multer({ storage, fileFilter });
+
 module.exports = upload;
