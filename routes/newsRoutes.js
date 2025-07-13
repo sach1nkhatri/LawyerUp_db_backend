@@ -20,4 +20,5 @@ router.post('/:id/undislike', newsController.undislikeNews);
 router.post('/:id/comment', authMiddleware, newsController.addComment);
 router.delete('/:id/comment/:index', authMiddleware, newsController.deleteComment);
 
+
 module.exports = router;

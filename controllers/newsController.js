@@ -149,4 +149,7 @@ exports.deleteComment = async (req, res) => {
   await news.save();
 
   res.json({ comments: news.comments });
+  
+
+  
 };

@@ -14,6 +14,7 @@ const reviewRoutes = require('./routes/reviewRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const pdfRoutes = require('./routes/pdfRoutes');
 const faqRoutes = require('./routes/faqRoutes');
+const paymentRoutes = require('./routes/paymentRoutes'); 
 const aiRoutes = require('./routes/aiRoutes')
 
 // Setup
@@ -63,6 +64,8 @@ app.use('/api/report', reportRoutes);
 app.use('/api/pdfs', pdfRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/manual-payment', paymentRoutes);
+
 
 // ✅ SOCKET.IO: Real-time chat logic
 const Booking = require('./models/Booking');
