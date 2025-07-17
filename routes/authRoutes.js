@@ -18,5 +18,18 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+
+
+// 🚧 Temporary: Unprotected for development
+router.get('/', async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+
 router.patch('/update-profile', auth, updateProfile);
 module.exports = router;

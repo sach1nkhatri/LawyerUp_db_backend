@@ -15,7 +15,9 @@ const reportRoutes = require('./routes/reportRoutes');
 const pdfRoutes = require('./routes/pdfRoutes');
 const faqRoutes = require('./routes/faqRoutes');
 const paymentRoutes = require('./routes/paymentRoutes'); 
+const adminControlRoutes = require('./routes/adminControlRoutes');
 const aiRoutes = require('./routes/aiRoutes')
+
 
 // Setup
 dotenv.config();
@@ -65,6 +67,7 @@ app.use('/api/pdfs', pdfRoutes);
 app.use('/api/faqs', faqRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/manual-payment', paymentRoutes);
+app.use('/api/admin-control', adminControlRoutes);
 
 
 // ✅ SOCKET.IO: Real-time chat logic
