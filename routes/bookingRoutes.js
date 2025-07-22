@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/bookingController');
+const authMiddleware = require('../middleware/authMiddleware');
+const { unlinkUserFromCompletedBookings} = require('../controllers/bookingController');
 
 // ✅ Create new booking (includes lawyer + lawyerList)
 router.post('/', bookingController.createBooking);
@@ -26,7 +28,7 @@ router.delete('/:id', bookingController.deleteBooking);
 router.post('/:bookingId/chat', bookingController.sendMessage);
 router.get('/:bookingId/chat', bookingController.getMessages);
 router.patch('/:bookingId/chat/read', bookingController.markMessagesAsRead);
-
+router.patch('/clear-user-history', authMiddleware, unlinkUserFromCompletedBookings);
 
 
 module.exports = router;

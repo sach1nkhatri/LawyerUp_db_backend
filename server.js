@@ -18,6 +18,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminControlRoutes = require('./routes/adminControlRoutes');
 const aiRoutes = require('./routes/aiRoutes')
 const { encrypt, decrypt } = require('./utils/customEncrypter');
+const deleteRoutes = require('./routes/deleteRoutes');
 
 // Setup
 dotenv.config();
@@ -68,6 +69,7 @@ app.use('/api/faqs', faqRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/manual-payment', paymentRoutes);
 app.use('/api/admin-control', adminControlRoutes);
+app.use('/api/delete', deleteRoutes);
 
 
 // ✅ SOCKET.IO: Real-time chat logic

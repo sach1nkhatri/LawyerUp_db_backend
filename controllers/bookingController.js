@@ -284,3 +284,26 @@ exports.markMessagesAsRead = async (req, res) => {
     res.status(500).json({ error: 'Failed to mark messages as read' });
   }
 };
+
+
+// 🧹 Unlink user ID from completed bookings (for clean UI/history)
+// 🧹 Unlink user from completed bookings (for UI cleanup, analytics safe)
+exports.unlinkUserFromCompletedBookings = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const result = await Booking.updateMany(
+      { user: userId, status: 'completed' },
+      { $unset: { user: "" } }
+    );
+
+    res.status(200).json({
+      message: 'User unlinked from completed bookings',
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Failed to unlink user from completed bookings:', error);
+    res.status(500).json({ message: 'Failed to unlink completed bookings' });
+  }
+};
+

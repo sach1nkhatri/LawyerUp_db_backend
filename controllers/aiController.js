@@ -192,3 +192,16 @@ exports.appendUserMessage = async (req, res) => {
     res.status(500).json({ error: 'Failed to append message' });
   }
 };
+// 🚨 Delete all chats for logged-in user
+exports.deleteAllChats = async (req, res) => {
+  try {
+    const result = await Chat.deleteMany({ user: req.user._id });
+    res.json({
+      message: 'All chats deleted successfully',
+      deletedCount: result.deletedCount
+    });
+  } catch (err) {
+    console.error('❌ Failed to delete all chats:', err.message);
+    res.status(500).json({ error: 'Failed to delete all chats' });
+  }
+};
