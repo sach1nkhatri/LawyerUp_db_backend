@@ -17,7 +17,7 @@ const faqRoutes = require('./routes/faqRoutes');
 const paymentRoutes = require('./routes/paymentRoutes'); 
 const adminControlRoutes = require('./routes/adminControlRoutes');
 const aiRoutes = require('./routes/aiRoutes')
-
+const { encrypt, decrypt } = require('./utils/customEncrypter');
 
 // Setup
 dotenv.config();
@@ -80,24 +80,47 @@ io.on('connection', (socket) => {
     socket.join(bookingId);
   });
 
+  // socket.on('sendMessage', async ({ bookingId, senderId, text, senderName }) => {
+  //   const message = {
+  //     sender: senderId,
+  //     text,
+  //     timestamp: new Date(),
+  //     status: 'sent'
+  //   };
+
+  //   await Booking.findByIdAndUpdate(bookingId, { $push: { messages: message } });
+
+  //   io.to(bookingId).emit('receiveMessage', {
+  //     ...message,
+  //     sender: {
+  //       _id: senderId,
+  //       fullName: senderName
+  //     }
+  //   });
+  // });
+
   socket.on('sendMessage', async ({ bookingId, senderId, text, senderName }) => {
+    const encryptedText = encrypt(text);
+  
     const message = {
       sender: senderId,
-      text,
+      text: encryptedText,
       timestamp: new Date(),
       status: 'sent'
     };
-
+  
     await Booking.findByIdAndUpdate(bookingId, { $push: { messages: message } });
-
+  
     io.to(bookingId).emit('receiveMessage', {
       ...message,
+      text, 
       sender: {
         _id: senderId,
         fullName: senderName
       }
     });
   });
+  
 
   // ✅ Handle typing notification
   socket.on('userTyping', (bookingId) => {

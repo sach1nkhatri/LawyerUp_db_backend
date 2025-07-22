@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking');
 const Lawyer = require('../models/Lawyer');
 const { generateAvailableSlots } = require('../utils/slotUtils');
+const { encrypt, decrypt } = require('../utils/customEncrypter');
 
 
 exports.createBooking = async (req, res) => {
@@ -152,24 +153,49 @@ exports.deleteBooking = async (req, res) => {
 };
 
 
+
 exports.getMessages = async (req, res) => {
   const { bookingId } = req.params;
 
   try {
     const booking = await Booking.findById(bookingId)
-      .populate('messages.sender', 'fullName email') // so we can show names
+      .populate('messages.sender', 'fullName email')
       .select('messages');
 
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    res.status(200).json(booking.messages);
+    const decryptedMessages = booking.messages.map(msg => ({
+      ...msg.toObject(),
+      text: decrypt(msg.text)
+    }));
+
+    res.status(200).json(decryptedMessages);
   } catch (err) {
     console.error('Fetch messages failed:', err);
     res.status(500).json({ error: 'Failed to load messages' });
   }
 };
+
+// exports.getMessages = async (req, res) => {
+//   const { bookingId } = req.params;
+
+//   try {
+//     const booking = await Booking.findById(bookingId)
+//       .populate('messages.sender', 'fullName email') // so we can show names
+//       .select('messages');
+
+//     if (!booking) {
+//       return res.status(404).json({ error: 'Booking not found' });
+//     }
+
+//     res.status(200).json(booking.messages);
+//   } catch (err) {
+//     console.error('Fetch messages failed:', err);
+//     res.status(500).json({ error: 'Failed to load messages' });
+//   }
+// };
 
 
 // 📩 Send a chat message for a booking
@@ -182,14 +208,16 @@ exports.sendMessage = async (req, res) => {
   }
 
   try {
+    const encryptedText = encrypt(text);
+
     const message = {
       sender: senderId,
-      text,
+      text: encryptedText,
       timestamp: new Date(),
       status: 'sent'
     };
 
-    const booking = await Booking.findByIdAndUpdate(
+    await Booking.findByIdAndUpdate(
       bookingId,
       { $push: { messages: message } },
       { new: true }
@@ -199,12 +227,48 @@ exports.sendMessage = async (req, res) => {
       .select({ messages: { $slice: -1 } })
       .populate('messages.sender', 'fullName email');
 
-    res.status(200).json(populatedMsg.messages[0]); // return last pushed message
+    const msg = populatedMsg.messages[0];
+    msg.text = decrypt(msg.text); // 🔓 Decrypt before sending back
+
+    res.status(200).json(msg);
   } catch (err) {
     console.error('Send message failed:', err);
     res.status(500).json({ error: 'Failed to send message' });
   }
 };
+
+// exports.sendMessage = async (req, res) => {
+//   const { bookingId } = req.params;
+//   const { senderId, text } = req.body;
+
+//   if (!text || !senderId) {
+//     return res.status(400).json({ error: 'Missing text or senderId' });
+//   }
+
+//   try {
+//     const message = {
+//       sender: senderId,
+//       text,
+//       timestamp: new Date(),
+//       status: 'sent'
+//     };
+
+//     const booking = await Booking.findByIdAndUpdate(
+//       bookingId,
+//       { $push: { messages: message } },
+//       { new: true }
+//     );
+
+//     const populatedMsg = await Booking.findById(bookingId)
+//       .select({ messages: { $slice: -1 } })
+//       .populate('messages.sender', 'fullName email');
+
+//     res.status(200).json(populatedMsg.messages[0]); // return last pushed message
+//   } catch (err) {
+//     console.error('Send message failed:', err);
+//     res.status(500).json({ error: 'Failed to send message' });
+//   }
+// };
 
 exports.markMessagesAsRead = async (req, res) => {
   const { bookingId } = req.params;
