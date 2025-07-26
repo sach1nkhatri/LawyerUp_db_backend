@@ -9,12 +9,8 @@ const reportSchema = new mongoose.Schema({
   message: {
     type: String,
     required: true
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
   }
-});
+}, { timestamps: true }); // ✅ enable automatic createdAt + updatedA
 
 module.exports = mongoose.model('Report', reportSchema);
 
