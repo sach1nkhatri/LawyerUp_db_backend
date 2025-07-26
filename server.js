@@ -19,6 +19,8 @@ const adminControlRoutes = require('./routes/adminControlRoutes');
 const aiRoutes = require('./routes/aiRoutes')
 const { encrypt, decrypt } = require('./utils/customEncrypter');
 const deleteRoutes = require('./routes/deleteRoutes');
+const { analyticsSocketHandler } = require('./utils/analyticsSocket');
+const analyticsRoutes = require('./routes/analytics');
 
 // Setup
 dotenv.config();
@@ -70,70 +72,53 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/manual-payment', paymentRoutes);
 app.use('/api/admin-control', adminControlRoutes);
 app.use('/api/delete', deleteRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 
-// ✅ SOCKET.IO: Real-time chat logic
+//  SOCKET.IO: Real-time chat logic
 const Booking = require('./models/Booking');
 
 io.on('connection', (socket) => {
-  console.log('🔌 Socket connected');
+  console.log('🔌 Socket connected:', socket.id);
 
+  // 🧠 Analytics socket init
+  analyticsSocketHandler(socket); // <--- this won't interfere with chat
+
+  // 💬 Chat logic
   socket.on('joinRoom', (bookingId) => {
     socket.join(bookingId);
   });
 
-  // socket.on('sendMessage', async ({ bookingId, senderId, text, senderName }) => {
-  //   const message = {
-  //     sender: senderId,
-  //     text,
-  //     timestamp: new Date(),
-  //     status: 'sent'
-  //   };
-
-  //   await Booking.findByIdAndUpdate(bookingId, { $push: { messages: message } });
-
-  //   io.to(bookingId).emit('receiveMessage', {
-  //     ...message,
-  //     sender: {
-  //       _id: senderId,
-  //       fullName: senderName
-  //     }
-  //   });
-  // });
-
   socket.on('sendMessage', async ({ bookingId, senderId, text, senderName }) => {
     const encryptedText = encrypt(text);
-  
+
     const message = {
       sender: senderId,
       text: encryptedText,
       timestamp: new Date(),
       status: 'sent'
     };
-  
+
     await Booking.findByIdAndUpdate(bookingId, { $push: { messages: message } });
-  
+
     io.to(bookingId).emit('receiveMessage', {
       ...message,
-      text, 
+      text, // decrypted for frontend
       sender: {
         _id: senderId,
         fullName: senderName
       }
     });
   });
-  
 
-  // ✅ Handle typing notification
   socket.on('userTyping', (bookingId) => {
     socket.to(bookingId).emit('userTyping');
   });
 
   socket.on('disconnect', () => {
-    console.log('❌ Socket disconnected');
+    console.log('❌ Socket disconnected:', socket.id);
   });
 });
-
 
   
 

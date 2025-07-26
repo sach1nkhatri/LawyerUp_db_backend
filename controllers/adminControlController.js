@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const Payment = require('../models/payment');
 
-// ✅ Get all users
+//  Get all users
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select('-password');
@@ -11,7 +11,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// ✅ Manually override plan and validity
+//  Manually override plan and validity
 const overridePlan = async (req, res) => {
   const { plan, validUntil } = req.body;
   try {
@@ -27,7 +27,7 @@ const overridePlan = async (req, res) => {
   }
 };
 
-// ✅ Reset to Free plan
+//  Reset to Free plan
 const resetPlan = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -42,7 +42,7 @@ const resetPlan = async (req, res) => {
   }
 };
 
-// ✅ Extend validity by X days
+//  Extend validity by X days
 const extendValidity = async (req, res) => {
   const { days } = req.body;
   try {
@@ -60,7 +60,7 @@ const extendValidity = async (req, res) => {
   }
 };
 
-// ✅ Get all manual payments
+//  Get all manual payments
 const getPayments = async (req, res) => {
   try {
     const payments = await Payment.find().populate('user', 'fullName email');
@@ -70,7 +70,7 @@ const getPayments = async (req, res) => {
   }
 };
 
-// ✅ Approve a payment
+//  Approve a payment
 const approvePayment = async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(
@@ -85,7 +85,7 @@ const approvePayment = async (req, res) => {
   }
 };
 
-// ✅ Reject a payment
+//  Reject a payment
 const rejectPayment = async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(
@@ -100,7 +100,7 @@ const rejectPayment = async (req, res) => {
   }
 };
 
-// ✅ Hold a payment
+//  Hold a payment
 const holdPayment = async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(
