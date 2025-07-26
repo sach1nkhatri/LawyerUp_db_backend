@@ -71,10 +71,10 @@ exports.loginAdmin = async (req, res) => {
 
   try {
     const user = await User.findOne({ email, role: 'admin' }).select('+password');
-    if (!user) return res.status(404).json({ message: '❌ Admin not found or unauthorized' });
+    if (!user) return res.status(404).json({ message: 'Admin not found or unauthorized' });
     
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: '❌ Invalid password' });
+    if (!isMatch) return res.status(401).json({ message: 'Invalid password' });
 
     res.json({
       user,
@@ -115,14 +115,14 @@ exports.updateProfile = async (req, res) => {
 exports.registerAdmin = async (req, res) => {
   const { fullName, email, password, secretKey } = req.body;
 
-  // 🧨 Hardcoded keys to bypass dotenv issue
+  //  Hardcoded keys to bypass dotenv issue
   const adminKeys = ['key1234567', 'keyMegaAdmin', 'admin999', 'topSecret666'];
 
   console.log('[🧪 Admin Register] Key:', secretKey);
   console.log('[🔐 Allowed Keys]:', adminKeys);
 
   if (!secretKey || !adminKeys.includes(secretKey.trim())) {
-    return res.status(401).json({ message: '❌ Invalid Admin Secret Key' });
+    return res.status(401).json({ message: ' Invalid Admin Secret Key' });
   }
 
   try {
