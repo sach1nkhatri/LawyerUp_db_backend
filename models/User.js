@@ -23,13 +23,20 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'lawyer'],
+    enum: ['user', 'lawyer', 'admin'],
     default: 'user'
   },
   plan: {
     type: String,
     default: 'Free Trial'
   },
+
+  status: {
+    type: String,
+    enum: ['verified', 'hold', 'disable'],
+    default: 'verified',
+  },
+  
 
 //complete profile section
   state: {
@@ -46,5 +53,7 @@ const userSchema = new mongoose.Schema({
   }
 
 }, { timestamps: true });
+
+
 
 module.exports = mongoose.model('User', userSchema);
