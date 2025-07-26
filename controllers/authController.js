@@ -66,6 +66,29 @@ exports.login = async (req, res) => {
 };
 
 
+exports.loginAdmin = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email, role: 'admin' }).select('+password');
+    if (!user) return res.status(404).json({ message: '❌ Admin not found or unauthorized' });
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ message: '❌ Invalid password' });
+
+    res.json({
+      user,
+      token: generateToken(user._id)
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+
+
 exports.updateProfile = async (req, res) => {
   const { name, contactNumber, city, state, address } = req.body;
 

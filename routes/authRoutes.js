@@ -4,6 +4,7 @@ const { register, login, updateProfile, getAllUsers } = require('../controllers/
 const auth = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const { registerAdmin } = require('../controllers/authController');
+const { loginAdmin } = require('../controllers/authController');
 const adminAuth = require('../middleware/authMiddleware').adminAuth; 
 const { updateUserStatus } = require('../controllers/authController');
 
@@ -42,4 +43,6 @@ router.get('/all-users', adminAuth, getAllUsers);
 router.patch('/status/:id', adminAuth, updateUserStatus);
 router.patch('/update-profile', auth, updateProfile);
 router.post('/admin/register', registerAdmin);
+router.post('/admin/login', loginAdmin);
+
 module.exports = router;
