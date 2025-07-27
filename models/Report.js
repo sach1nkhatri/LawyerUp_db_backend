@@ -9,8 +9,12 @@ const reportSchema = new mongoose.Schema({
   message: {
     type: String,
     required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'fixed'],
+    default: 'pending'
   }
-}, { timestamps: true }); // ✅ enable automatic createdAt + updatedA
+}, { timestamps: true });
 
 module.exports = mongoose.model('Report', reportSchema);
-
