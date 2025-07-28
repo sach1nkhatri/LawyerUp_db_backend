@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getAnalyticsData } = require('../controllers/analyticsController');
+const analyticsController = require('../controllers/analyticsController');
 
-router.get('/realtime', getAnalyticsData);
+router.get('/', analyticsController.getAnalyticsData); // now matches /api/analytics
+router.get('/lifetime', analyticsController.getLifetimeAnalytics); // matches /api/analytics/lifetime
 
 module.exports = router;

@@ -1,35 +1,60 @@
-const Pdf = require('../models/pdf');
-const path = require('path');
+const pdfParse = require('pdf-parse');
+const fs = require('fs');
+const PdfVector = require('../models/PdfVector');
+const Chat = require('../models/chat');
+const { getEmbedding } = require('../utils/embeddingHelper');
 
-exports.uploadPdf = async (req, res) => {
-  try {
-    const { title } = req.body;
+const splitIntoChunks = (text, max = 500) => {
+  const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [];
+  const chunks = [];
+  let chunk = '';
 
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+  for (const s of sentences) {
+    if ((chunk + s).length < max) chunk += s;
+    else {
+      chunks.push(chunk);
+      chunk = s;
     }
-
-    const relativeUrl = `/uploads/${req.file.filename}`;
-
-    const newPdf = new Pdf({
-      title,
-      url: relativeUrl,
-    });
-
-    await newPdf.save();
-
-    res.status(201).json({ message: 'PDF uploaded locally', pdf: newPdf });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Failed to upload PDF' });
   }
+  if (chunk) chunks.push(chunk);
+  return chunks;
 };
 
-exports.getAllPdfs = async (req, res) => {
+exports.uploadChatPDF = async (req, res) => {
   try {
-    const pdfs = await Pdf.find().sort({ uploadedAt: -1 });
-    res.json(pdfs);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch PDFs' });
+    const chatId = req.params.chatId;
+    const filePath = req.file.path;
+    const chat = await Chat.findOne({ _id: chatId, user: req.user._id });
+    if (!chat) return res.status(404).json({ error: 'Chat not found' });
+
+    const buffer = fs.readFileSync(filePath);
+    const data = await pdfParse(buffer);
+
+    if (!data.text || data.text.trim().length === 0) {
+      throw new Error('PDF contains no readable text.');
+    }
+
+    const chunks = splitIntoChunks(data.text);
+
+    for (const chunk of chunks) {
+      try {
+        const embedding = await getEmbedding(chunk);
+        if (!embedding || !embedding[0]) throw new Error('Invalid embedding');
+        await PdfVector.create({
+          user: req.user._id,
+          chat: chatId,
+          text: chunk,
+          embedding
+        });
+      } catch (embedErr) {
+        console.warn('❌ Skipped chunk:', embedErr.message);
+        continue;
+      }
+    }
+
+    res.json({ message: 'PDF uploaded and vectorized successfully', chunks: chunks.length });
+  } catch (err) {
+    console.error('❌ PDF vectorization failed:', err.message);
+    res.status(500).json({ error: 'Failed to upload or process PDF' });
   }
 };

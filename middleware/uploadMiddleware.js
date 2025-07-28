@@ -10,6 +10,7 @@ const getUploadDir = (file) => {
   if (fieldname === 'profilePhoto') return 'uploads/lawyers/photo';
   if (fieldname === 'licenseFile') return 'uploads/lawyers/license';
   if (mimetype === 'application/pdf') return 'uploads/pdf';
+  if (fieldname === 'chatpdf') return 'uploads/chatpdf'; 
   if (fieldname === 'screenshot') return 'uploads/payment';
 
 

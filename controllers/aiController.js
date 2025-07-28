@@ -50,7 +50,6 @@ exports.deleteChat = async (req, res) => {
   }
 };
 
-// 💬 Stream and Save Chat
 exports.sendMessage = async (req, res) => {
   const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
   const { chatId, message, model = 'gemma-3-12b-it-q4f' } = req.body;
@@ -65,18 +64,38 @@ exports.sendMessage = async (req, res) => {
         user: req.user._id,
         messages: [],
         title: 'New Chat',
-        model
+        model,
+        trialAvailable: true
       });
     } else {
       chat = await Chat.findOne({ _id: chatId, user: req.user._id });
       if (!chat) return res.status(404).json({ error: 'Chat not found' });
     }
 
-    // Save user message
+    // 🚨 LIMIT CHECK — Only for Free Trial plan
+    if (req.user.plan === 'Free Trial') {
+      if (chat.trialAvailable === false) {
+        return res.status(403).json({ error: 'Trial ended. Please upgrade to continue.' });
+      }
+
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+
+      const humanMessagesToday = chat.messages.filter(
+        (msg) => msg.role !== 'assistant' && msg.createdAt >= todayMidnight
+      );
+
+      if (humanMessagesToday.length >= 5) {
+        chat.trialAvailable = false;
+        await chat.save();
+        return res.status(403).json({ error: 'Daily trial limit reached. Upgrade to continue.' });
+      }
+    }
+
+    // ✅ Save user message
     chat.messages.push({ role: 'user', content: message });
     await chat.save();
 
-    // Prepare request
     const promptMessages = [
       { role: "system", content: "You are a helpful Nepali legal advisor." },
       ...chat.messages
@@ -148,6 +167,7 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+
 // ✅ Save full reply from frontend
 exports.saveReply = async (req, res) => {
   const { chatId, reply } = req.body;
@@ -180,6 +200,44 @@ exports.appendUserMessage = async (req, res) => {
   }
 
   try {
+    const userId = req.user._id;
+    const userPlan = req.user.plan;
+
+    // 🔒 Limit check only for Free Trial users
+    if (userPlan === 'Free Trial') {
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+
+      // 🧠 Find all chats with today's messages
+      const userChats = await Chat.find({
+        user: userId,
+        model: 'lawai-1.0',
+        'messages.createdAt': { $gte: todayMidnight }
+      });
+
+      // 🔁 Count all non-assistant messages across all chats
+      let messageCountToday = 0;
+      userChats.forEach(chat => {
+        chat.messages.forEach(msg => {
+          if (msg.role !== 'assistant' && msg.createdAt >= todayMidnight) {
+            messageCountToday++;
+          }
+        });
+      });
+
+      if (messageCountToday >= 5) {
+        // 🚫 Trial ended — lock all relevant chats
+        await Chat.updateMany(
+          { user: userId, model: 'lawai-1.0' },
+          { $set: { trialAvailable: false } }
+        );
+        return res.status(403).json({
+          error: 'Trial limit reached. Please try again after midnight or upgrade your plan.'
+        });
+      }
+    }
+
+    // ✅ Save user message
     const chat = await Chat.findOne({ _id: chatId, user: req.user._id });
     if (!chat) return res.status(404).json({ error: 'Chat not found' });
 
@@ -192,6 +250,7 @@ exports.appendUserMessage = async (req, res) => {
     res.status(500).json({ error: 'Failed to append message' });
   }
 };
+
 // 🚨 Delete all chats for logged-in user
 exports.deleteAllChats = async (req, res) => {
   try {
