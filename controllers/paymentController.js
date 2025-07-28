@@ -122,17 +122,31 @@ exports.downgradeExpiredUsers = async (req, res) => {
         updatedUserIds.push(user.email);
       }
 
-      // 🔁 Update the payment status to 'expired'
+      // 🔁 Update payment status to 'expired'
       payment.status = 'expired';
       await payment.save();
+
+      // 🆕 Additional Task (doesn't break previous logic)
+      // Example: Create a log, notify, cleanup, etc.
+      await SomeModel.create({
+        user: userId,
+        reason: 'Payment expired and plan downgraded',
+        timestamp: now,
+      });
+
+      // or: await notifyUser(user.email, 'Your plan expired', 'Please renew to continue using Premium features.');
     }
 
-    res.json({ message: 'Expired users downgraded and payment statuses updated.', users: updatedUserIds });
+    res.json({
+      message: 'Expired users downgraded and payment statuses updated.',
+      users: updatedUserIds
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to downgrade users' });
   }
 };
+
 
 
 exports.getUsersWithPayments = async (req, res) => {
