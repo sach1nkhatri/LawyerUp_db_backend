@@ -1,9 +1,9 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../app');
-const User = require('../models/User');
-const Lawyer = require('../models/Lawyer');
-const Booking = require('../models/Booking');
+const app = require('../../app');
+const User = require('../../models/User');
+const Lawyer = require('../../models/Lawyer');
+const Booking = require('../../models/Booking');
 
 let token, userId, lawyerId, lawyerListId, bookingId;
 
