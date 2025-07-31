@@ -1,7 +1,7 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../server'); // Adjust if app is exported from another file
-const User = require('../models/User');
+const app = require('../../server'); // Adjust if app is exported from another file
+const User = require('../../models/User');
 
 let token;
 
